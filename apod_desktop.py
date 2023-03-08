@@ -15,6 +15,9 @@ from datetime import date
 import os
 import image_lib
 import inspect
+import apod_api
+from sys import argv
+from datetime import datetime
 
 # Global variables
 image_cache_dir = None  # Full path of image cache directory
@@ -52,8 +55,16 @@ def get_apod_date():
     Returns:
         date: APOD date
     """
-    # TODO: Complete function body
-    apod_date = date.fromisoformat('2022-12-25')
+        
+    apod_date = datetime.now()
+
+    start_date = datetime.strptime("1995-06-16", "%Y-%m-%d")
+    today_date = datetime.now()
+    
+    if apod_api.date_validate(argv[1]) and apod_api.date_in_range(argv[1], start_date, today_date):
+        
+        apod_date = date.fromisoformat(argv[1])
+
     return apod_date
 
 def get_script_dir():

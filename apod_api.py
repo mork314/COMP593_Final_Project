@@ -35,7 +35,6 @@ def get_apod_info(apod_date = datetime.today().strftime('%Y-%m-%d')):
     #check if in yyyy-mm-dd
     start_date = datetime.strptime("1995-06-16", "%Y-%m-%d")
     today_date = datetime.now()
-    apod_date_formatted = datetime.strptime(apod_date, "%Y-%m-%d")
     
     if date_validate(apod_date):
         
@@ -43,7 +42,9 @@ def get_apod_info(apod_date = datetime.today().strftime('%Y-%m-%d')):
          #check if not before 1995-06-16
         #check if not in the future
         #print descriptive error if invalid, and quit
-        if date_in_range(apod_date_formatted, start_date, today_date):
+        
+
+        if date_in_range(apod_date, start_date, today_date):
             
             print('date in range :D')
 
@@ -77,10 +78,10 @@ def date_validate(date):
 
 def date_in_range(date, start, end):
     '''
-    ensures that a date is within a specified range 
+    ensures that a date is within the range specified
     '''
     
-    if start <= date <= end:
+    if start <= datetime.strptime(date, "%Y-%m-%d") <= end:
         
         return True
     
