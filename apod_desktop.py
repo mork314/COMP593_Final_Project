@@ -18,10 +18,12 @@ import inspect
 import apod_api
 from sys import argv
 from datetime import datetime
+import re
+
 
 # Global variables
-image_cache_dir = None  # Full path of image cache directory
-image_cache_db = None   # Full path of image cache database
+image_cache_dir = os.path.dirname(argv[0]) + '\image_cache_directory'
+image_cache_db = image_cache_dir + '\image_cache_db.sql'
 
 def main():
     ## DO NOT CHANGE THIS FUNCTION ##
@@ -60,11 +62,12 @@ def get_apod_date():
 
     start_date = datetime.strptime("1995-06-16", "%Y-%m-%d")
     today_date = datetime.now()
-    
-    if apod_api.date_validate(argv[1]) and apod_api.date_in_range(argv[1], start_date, today_date):
-        
-        apod_date = date.fromisoformat(argv[1])
+    if len(argv) > 1:
 
+        if apod_api.date_validate(argv[1]) and apod_api.date_in_range(argv[1], start_date, today_date):
+            
+            apod_date = date.fromisoformat(argv[1])
+    
     return apod_date
 
 def get_script_dir():
@@ -91,10 +94,19 @@ def init_apod_cache(parent_dir):
     """
     global image_cache_dir
     global image_cache_db
-    # TODO: Determine the path of the image cache directory
-    # TODO: Create the image cache directory if it does not already exist
-    # TODO: Determine the path of image cache DB
-    # TODO: Create the DB if it does not already exist
+    if os.path.exists(image_cache_dir):
+        return
+    else:
+        os.mkdir(image_cache_dir)
+
+    if os.path.isfile(image_cache_db):
+        return
+    else:
+        None ## TODO: Create the DB if it does not already exist
+
+
+
+    
 
 def add_apod_to_cache(apod_date):
     """Adds the APOD image from a specified date to the image cache.
@@ -110,10 +122,30 @@ def add_apod_to_cache(apod_date):
         int: Record ID of the APOD in the image cache DB, if a new APOD is added to the
         cache successfully or if the APOD already exists in the cache. Zero, if unsuccessful.
     """
-    print("APOD date:", apod_date.isoformat())
-    # TODO: Download the APOD information from the NASA API
+    apod_date = re.search(('.*\-.*\-..'), apod_date.isoformat()).group()
+    print("APOD date:", apod_date)
+    #Download the APOD information from the NASA API
+    apod_info_dict = apod_api.get_apod_info(apod_date)
+    
+    apod_image_url = apod_api.get_apod_image_url(apod_info_dict)
     # TODO: Download the APOD image
-    # TODO: Check whether the APOD already exists in the image cache
+    
+    apod_image_search = re.search(('https://.*\/.*\/.*\/.*\/(.*)(\..*)$'), apod_image_url)
+    
+    apod_image_name = apod_image_search.group(1)
+
+    file_extension = apod_image_search.group(2)
+
+    #Removes leading and trailing whitespace
+    apod_image_name = apod_image_name.strip()
+    #Replaces inner spaces with underscores
+    apod_image_name = re.sub('\s', '_', apod_image_name)
+    #Replaces characters other than letters, numbers, and underscores
+    apod_image_name = re.sub(r'[^A-Za-z0-9_]', '')
+
+    apod_image_path = f"{apod_image_name}\\{file_extension}"
+
+     # TODO: Check whether the APOD already exists in the image cache
     # TODO: Save the APOD file to the image cache directory
     # TODO: Add the APOD information to the DB
     return 0

@@ -1,6 +1,10 @@
 '''
 Library of useful functions for working with images.
 '''
+
+import urllib.request
+from PIL import Image
+
 def main():
     # TODO: Add code to test the functions in this module
     return
