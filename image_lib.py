@@ -2,11 +2,19 @@
 Library of useful functions for working with images.
 '''
 
-import urllib.request
+import requests
 from PIL import Image
+import ctypes
 
 def main():
-    # TODO: Add code to test the functions in this module
+    image_data = download_image(r'https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fmondoweiss.net%2Fwp-content%2Fuploads%2F2013%2F11%2Fpig.jpg&f=1&nofb=1&ipt=827663c3bb010318252873e02a4ee35ccb9bf9b38aadaecb58e9d98a1c172094&ipo=images')
+    
+    image_path = 'C:\\temp\\pig_pic.jpg'
+
+    save_image_file(image_data, image_path)
+    
+    set_desktop_background_image(image_path)
+
     return
 
 def download_image(image_url):
@@ -20,8 +28,15 @@ def download_image(image_url):
     Returns:
         bytes: Binary image data, if succcessful. None, if unsuccessful.
     """
-    # TODO: Complete function body
-    return
+    try: 
+        image_data = requests.get(image_url).content
+        
+        return image_data
+    except:
+        return None
+
+
+    
 
 def save_image_file(image_data, image_path):
     """Saves image data as a file on disk.
@@ -35,8 +50,20 @@ def save_image_file(image_data, image_path):
     Returns:
         bytes: True, if succcessful. False, if unsuccessful
     """
-    # TODO: Complete function body
-    return
+    
+    try:
+        
+        image_file = open(image_path, 'wb')
+
+        image_file.write(image_data)
+
+        image_file.close()
+
+        return True
+    except:
+
+        return False
+
 
 def set_desktop_background_image(image_path):
     """Sets the desktop background image to a specific image.
@@ -47,8 +74,15 @@ def set_desktop_background_image(image_path):
     Returns:
         bytes: True, if succcessful. False, if unsuccessful        
     """
-    # TODO: Complete function body
-    return
+    
+    try:
+        ctypes.windll.user32.SystemParametersInfoW(20, 0, image_path, 0)
+
+        return True
+    except:
+
+        return False
+   
 
 def scale_image(image_size, max_size=(800, 600)):
     """Calculates the dimensions of an image scaled to a maximum width
