@@ -6,6 +6,7 @@ from datetime import datetime
 import sys
 import requests
 import re
+import hashlib
 
 def main():
 

@@ -19,11 +19,14 @@ import apod_api
 from sys import argv
 from datetime import datetime
 import re
+import sqlite3
+import image_lib
+import hashlib
 
 
 # Global variables
 image_cache_dir = os.path.dirname(argv[0]) + '\image_cache_directory'
-image_cache_db = image_cache_dir + '\image_cache_db.sql'
+image_cache_db = image_cache_dir + '\image_cache_db.db'
 
 def main():
     ## DO NOT CHANGE THIS FUNCTION ##
@@ -94,19 +97,28 @@ def init_apod_cache(parent_dir):
     """
     global image_cache_dir
     global image_cache_db
-    if os.path.exists(image_cache_dir):
-        return
-    else:
+    if not os.path.exists(image_cache_dir):
         os.mkdir(image_cache_dir)
 
     if os.path.isfile(image_cache_db):
         return
-    else:
-        None ## TODO: Create the DB if it does not already exist
-
-
-
     
+    else:
+        con = sqlite3.connect(image_cache_db)
+        cur = con.cursor()
+        create_img_tbl_query = """
+        CREATE TABLE IF NOT EXISTS images
+        (
+            id              INTEGER PRIMARY KEY,
+            title           TEXT NOT NULL,
+            explanation     TEXT NOT NULL,
+            full_path       TEXT NOT NULL,
+            sha_256_hash    TEXT NOT NULL
+        );      
+        
+        """
+
+
 
 def add_apod_to_cache(apod_date):
     """Adds the APOD image from a specified date to the image cache.
@@ -128,24 +140,26 @@ def add_apod_to_cache(apod_date):
     apod_info_dict = apod_api.get_apod_info(apod_date)
     
     apod_image_url = apod_api.get_apod_image_url(apod_info_dict)
-    # TODO: Download the APOD image
     
-    apod_image_search = re.search(('https://.*\/.*\/.*\/.*\/(.*)(\..*)$'), apod_image_url)
+    #Downloads the apod image
     
-    apod_image_name = apod_image_search.group(1)
+    downloaded_image = image_lib.download_image(apod_image_url)
 
-    file_extension = apod_image_search.group(2)
+    title = apod_info_dict['title']
 
-    #Removes leading and trailing whitespace
-    apod_image_name = apod_image_name.strip()
-    #Replaces inner spaces with underscores
-    apod_image_name = re.sub('\s', '_', apod_image_name)
-    #Replaces characters other than letters, numbers, and underscores
-    apod_image_name = re.sub(r'[^A-Za-z0-9_]', '')
+    apod_image_path = determine_apod_file_path(title, apod_image_url)
+   
+    #Saves the file to the computer
 
-    apod_image_path = f"{apod_image_name}\\{file_extension}"
+    image_lib.save_image_file(downloaded_image, apod_image_path)
+    
+    explanation = apod_info_dict['explanation']
 
-     # TODO: Check whether the APOD already exists in the image cache
+    image_hash = hashlib.sha256(apod_info_dict).hexdigest()
+
+    add_apod_to_db(title, explanation, apod_image_path, image_hash)
+
+    # TODO: Check whether the APOD already exists in the image cache
     # TODO: Save the APOD file to the image cache directory
     # TODO: Add the APOD information to the DB
     return 0
@@ -162,7 +176,12 @@ def add_apod_to_db(title, explanation, file_path, sha256):
     Returns:
         int: The ID of the newly inserted APOD record, if successful.  Zero, if unsuccessful       
     """
+
+
     # TODO: Complete function body
+
+
+
     return 0
 
 def get_apod_id_from_db(image_sha256):
@@ -204,8 +223,25 @@ def determine_apod_file_path(image_title, image_url):
     Returns:
         str: Full path at which the APOD image file must be saved in the image cache directory
     """
-    # TODO: Complete function body
-    return
+    
+    global image_cache_dir
+
+    apod_image_search = re.search(('\..*$'), image_url)
+    
+    file_extension = apod_image_search.group()
+
+    #Removes leading and trailing whitespace
+    image_title = image_title.strip()
+    #Replaces inner spaces with underscores
+    image_title = re.sub('\s', '_', image_title)
+    #Replaces characters other than letters, numbers, and underscores
+    image_title = re.sub(r'[^A-Za-z0-9_]', '', image_title)
+    
+    image_path = f"{image_cache_dir}\\{image_title}{file_extension}"
+
+    print(image_path)
+
+    return image_path
 
 def get_apod_info(image_id):
     """Gets the title, explanation, and full path of the APOD having a specified

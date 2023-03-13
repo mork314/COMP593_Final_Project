@@ -3,7 +3,6 @@ Library of useful functions for working with images.
 '''
 
 import requests
-from PIL import Image
 import ctypes
 
 def main():
