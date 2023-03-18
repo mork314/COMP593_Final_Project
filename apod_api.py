@@ -39,15 +39,13 @@ def get_apod_info(apod_date = datetime.today().strftime('%Y-%m-%d')):
     
     if date_validate(apod_date):
         
-        print('correct format :D')
-         #check if not before 1995-06-16
+                #check if not before 1995-06-16
         #check if not in the future
         #print descriptive error if invalid, and quit
         
 
         if date_in_range(apod_date, start_date, today_date):
             
-            print('date in range :D')
 
             my_key = 'DgriSg16XPnG7g7kLePDwFXFD8CZlQqbGMVZkYTS'
             
