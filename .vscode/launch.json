@@ -12,7 +12,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["2023-02-24"]
+            "args": ["2003-07-23"]
         }
     ]
 }
