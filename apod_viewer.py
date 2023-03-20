@@ -5,6 +5,7 @@ import apod_desktop
 from PIL import ImageTk, Image
 from tkcalendar import Calendar
 from datetime import date, datetime
+import image_lib
 
 # Determine the path and parent directory of this script
 script_path = os.path.abspath(inspect.getframeinfo(inspect.currentframe()).filename)
@@ -127,14 +128,34 @@ def display_image_and_explanation(image_path, image_info):
 
     explanation_label.configure(font = font_tuple)
 
- 
+def make_home_screen():
+
+    #Downloads the desired default image
+
+    image_data = image_lib.download_image(r'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.models-resource.com%2Fresources%2Fbig_icons%2F48%2F47830.png&f=1&nofb=1&ipt=4457110841d33186f65927ad4fd111c44c90daaa90154770bdc765b0edba9cf1&ipo=images')
+    
+    image_path = script_dir + '\minion_default.jpg'
+
+    image_lib.save_image_file(image_data, image_path)
+
+    img_to_display = Image.open(image_path)
+
+    tk_image = ImageTk.PhotoImage(img_to_display)
+
+    img_label = Label(image = tk_image)
+
+    img_label.image = tk_image
+
+    img_label.pack()
+
+    return
 
 
 #select date from calendar --> translate date into proper format for apod_desktop functions
 # use apod_desktop functions to get that image, import title, description, file location to this script
 # display image w/ title and description.
 
-
+make_home_screen()
 
 create_calendar_button()
 
