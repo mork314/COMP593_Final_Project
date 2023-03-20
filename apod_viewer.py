@@ -79,7 +79,7 @@ def create_calendar_button():
     
     button = Button(root, text = "Open the Calendar to Select a Date", command=get_date_and_image)
     
-    button.pack(pady=20)
+    button.place(relx = 0.5, rely = 0.95, anchor = 'center')
 
 
 def display_image_and_explanation(image_path, image_info):
@@ -109,15 +109,15 @@ def display_image_and_explanation(image_path, image_info):
 
     explanation_label = Label(root, text = image_info, wraplength = 0.95 * window_width, bg = "deep pink", fg = "yellow")
 
-    explanation_label.place(relx = 0.5, rely = 0.85, anchor = 'center')  
+    explanation_label.place(relx = 0.5, rely = 0.75, anchor = 'center')  
     
     
 
     #scales font size w/ amount of text & window size - weird things happened when it was a float value so we're just doing this :D
 
-    font_size = int(12 * (window_height / 800))
+    font_size = int(8 * (window_height / 800))
 
-    while explanation_label.winfo_reqwidth() < 0.95 * window_width:
+    while explanation_label.winfo_reqheight() < 0.2 * window_height:
         font_size += 1
         explanation_label.config(font=("Arial", font_size))
 
