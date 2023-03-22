@@ -33,6 +33,11 @@ root.title("Astronomy Picture of the Day Viewer")
 mindate = date(1995, 6, 16)
 maxdate = date.today()
 
+global image_path
+
+image_path = ''
+
+root.image = image_path
 
 
 
@@ -57,11 +62,9 @@ def open_calendar():
         
     return date_selected
 
+def get_date_and_image_cal():
 
-def get_date_and_image():
-
-    for widget in root.winfo_children():
-        widget.destroy()
+    screen_reset()
 
     apod_date = open_calendar()
 
@@ -75,17 +78,41 @@ def get_date_and_image():
 
     display_image_and_explanation(image_path, image_info)
 
-    create_calendar_button()
-
-    dropdown_menu()
-
-
 def create_calendar_button():
     
-    button = Button(root, text = "Open the Calendar to Select a Date", command=get_date_and_image)
+    cal_button = Button(root, text = "Open the Calendar to Select a Date", command=get_date_and_image_cal)
     
-    button.grid(column = 2, row = 2)
+    cal_button.grid(column = 1, row = 2, sticky = "nsew")
 
+def get_date_and_image_dropdown(apod_title):
+    
+    screen_reset()
+    
+    con = sqlite3.connect(apod_desktop.image_cache_db)
+
+    cur = con.cursor()
+
+    get_image_query = """
+        SELECT id FROM images
+        WHERE title = ?
+    
+    """
+
+    cur.execute(get_image_query, (apod_title,))
+
+    apod_id = cur.fetchone()[0]
+
+    apod_info = apod_desktop.get_apod_info(apod_id)
+
+    image_path = apod_info['file_path']
+
+    image_info = apod_info['explanation']
+
+    display_image_and_explanation(image_path, image_info)
+
+    con.close()
+
+    
 
 def display_image_and_explanation(image_path, image_info):
     
@@ -110,11 +137,11 @@ def display_image_and_explanation(image_path, image_info):
 
     img_label.image = tk_image
 
-    img_label.grid(column = 0, row = 0, columnspan = 3, sticky = "WE")
+    img_label.grid(column = 0, row = 0, columnspan = 3, sticky = "nsew")
 
     explanation_label = Label(root, text = image_info, wraplength = window_width, bg = "deep pink", fg = "yellow")
 
-    explanation_label.grid(column = 0, row = 1, columnspan = 3, sticky = "WE")
+    explanation_label.grid(column = 0, row = 1, columnspan = 3, sticky = "nsew")
     
     #scales font size w/ amount of text & window size - weird things happened when it was a float value so we're just doing this :D
 
@@ -126,7 +153,8 @@ def display_image_and_explanation(image_path, image_info):
         font_size += 1
         explanation_label.config(font=("Comic Sans MS", font_size))
     
-
+    return image_path
+    
 def make_home_screen():
 
     #Downloads the desired default image
@@ -149,9 +177,15 @@ def make_home_screen():
 
     img_label.image = tk_image
 
-    img_label.grid(column = 0, columnspan = 3, row = 1, padx = 10, pady = 10, sticky = "WE")
+    img_label.grid(column = 0, columnspan = 3, row = 1, padx = 10, pady = 10, sticky = "nsew")
 
 def dropdown_menu():
+
+    #Removes the button that opened the menu
+
+    #root.grid_slaves(row = 2, column = 0)[0].destroy()
+    
+    #connects to the database
 
     con = sqlite3.connect(apod_desktop.image_cache_db)
 
@@ -176,45 +210,74 @@ def dropdown_menu():
 
     #Creates a dropdown menu containing those titles
 
-    dropdown_group = LabelFrame(root, height = int(window_height / 10), text = "View Cached Image")
-    dropdown_group.grid(column = 0, row = 2)
+    global dropdown_group
 
-    Label(dropdown_group, text = "Select an image from the database :").grid(column = 0, row = 0)
+    dropdown_group = LabelFrame(root, height = int(window_height / 10), text = "View Cached Image")
+    dropdown_group.grid(column = 0, row = 2, sticky = "nsew")
+
+    Label(dropdown_group, text = "Select an image from the database :").grid(column = 0, row = 0, sticky = "nsew")
 
     n = StringVar()
 
-    image_chosen = Combobox(dropdown_group, width = 27, textvariable = n)
+    image_chosen = Combobox(dropdown_group, values = titles_list, width = 27, textvariable = n)
 
-    image_chosen['values'] = titles_list
+    image_chosen.grid(column=1, row = 0, sticky = "nsew")
 
-    image_chosen.grid(column=1, row = 0)
-    
-    image_chosen.set("Select image")
+    #def fetch_image():
 
-    def get_selection(*arg):
-        
-        selected_title = titles_list[image_chosen.current()]
-        
-        return selected_title
+       # print(image_chosen.get())
 
-    n.trace('w', get_selection)
-      
+    select_button = Button(dropdown_group, text = "Select this image", command=lambda: get_date_and_image_dropdown(image_chosen.get()))
+    select_button.grid(column = 2, row = 0, sticky = "nsew")
+
     con.close()
 
+def screen_reset():
 
+    for widget in root.winfo_children():
+        widget.destroy()
+    
+    create_calendar_button()
+
+    dropdown_menu()
+
+    create_desktop_button()
+
+def dynamic_resize():
+    for row_num in range(0, 2):
+        root.rowconfigure(row_num, weight = 1)
+        dropdown_group.rowconfigure(row_num, weight = 1)
+    
+    for column_num in range(0, 2):
+        root.columnconfigure(column_num, weight = 1)
+        dropdown_group.columnconfigure(column_num, weight = 1)
+
+def set_desktop_image():
+
+    image_lib.set_desktop_background_image(image_path)
+
+def create_desktop_button():
+
+    desk_button = Button(root, text = "Set the current image as your desktop background", command=set_desktop_image())
+    
+    desk_button.grid(column = 2, row = 2, sticky = "nsew")
 
 #select date from calendar --> translate date into proper format for apod_desktop functions
 # use apod_desktop functions to get that image, import title, description, file location to this script
 # display image w/ title and description.
 
-dropdown_menu()
+
 
 #displays default image + menu options
 
 make_home_screen()
 
+dropdown_menu()
+
 create_calendar_button()
 
+create_desktop_button()
+
+dynamic_resize()
+
 root.mainloop()
-
-
