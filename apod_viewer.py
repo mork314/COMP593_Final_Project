@@ -8,6 +8,7 @@ from tkcalendar import Calendar
 from datetime import date, datetime
 import image_lib
 import sqlite3
+import ctypes
 
 # Determine the path and parent directory of this script
 script_path = os.path.abspath(inspect.getframeinfo(inspect.currentframe()).filename)
@@ -74,6 +75,8 @@ def get_date_and_image_cal():
 
     image_path = apod_info['file_path']
 
+    root.image = image_path
+
     image_info = apod_info['explanation']
 
     display_image_and_explanation(image_path, image_info)
@@ -106,13 +109,13 @@ def get_date_and_image_dropdown(apod_title):
 
     image_path = apod_info['file_path']
 
+    root.image = image_path
+
     image_info = apod_info['explanation']
 
     display_image_and_explanation(image_path, image_info)
 
-    con.close()
-
-    
+    con.close()   
 
 def display_image_and_explanation(image_path, image_info):
     
@@ -252,15 +255,44 @@ def dynamic_resize():
         root.columnconfigure(column_num, weight = 1)
         dropdown_group.columnconfigure(column_num, weight = 1)
 
-def set_desktop_image():
+def set_desktop_image(image_path):
 
     image_lib.set_desktop_background_image(image_path)
 
 def create_desktop_button():
 
-    desk_button = Button(root, text = "Set the current image as your desktop background", command=set_desktop_image())
+    desk_button = Button(root, text = "Set the current image as your desktop background", command=lambda: set_desktop_image(root.image))
     
     desk_button.grid(column = 2, row = 2, sticky = "nsew")
+
+def set_window_and_task_image():
+
+    #Saves the desired image
+    
+    image_data = image_lib.download_image(r'https://cdn-icons-png.flaticon.com/512/3306/3306571.png')
+
+    image_path = script_dir + '\window_default.jpg'
+
+    image_lib.save_image_file(image_data, image_path)
+
+    #turns the image into a .ico photoimage thingy
+
+    ico = Image.open(image_path)
+
+    #Sets the window icon
+
+    ico.save(image_path, format='ICO')
+
+    root.iconbitmap(False, image_path)
+
+    window_handle = ctypes.windll.user32.GetParent(root.winfo_id())
+
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("Tkinter_id")
+
+    ctypes.windll.user32.SetClassLongW(window_handle, -14, ctypes.windll.shell32.Shell_GetCachedImageIndexW(image_path, 0, 0x00000000))
+
+
+
 
 #select date from calendar --> translate date into proper format for apod_desktop functions
 # use apod_desktop functions to get that image, import title, description, file location to this script
@@ -271,6 +303,8 @@ def create_desktop_button():
 #displays default image + menu options
 
 make_home_screen()
+
+set_window_and_task_image()
 
 dropdown_menu()
 
