@@ -75,6 +75,8 @@ def get_date_and_image_cal():
 
     image_path = apod_info['file_path']
 
+    #was having trouble getting desktop button to remember image_path existed - this seems to fix it
+
     root.image = image_path
 
     image_info = apod_info['explanation']
@@ -94,6 +96,8 @@ def get_date_and_image_dropdown(apod_title):
     con = sqlite3.connect(apod_desktop.image_cache_db)
 
     cur = con.cursor()
+
+    #Fetches the database ID of the image with the chosen title
 
     get_image_query = """
         SELECT id FROM images
@@ -152,6 +156,8 @@ def display_image_and_explanation(image_path, image_info):
 
     min_height = 0.2 * window_height
 
+    #Increases font size to fit the size of the window
+
     while explanation_label.winfo_reqheight() < min_height:
         font_size += 1
         explanation_label.config(font=("Comic Sans MS", font_size))
@@ -183,33 +189,10 @@ def make_home_screen():
     img_label.grid(column = 0, columnspan = 3, row = 1, padx = 10, pady = 10, sticky = "nsew")
 
 def dropdown_menu():
-
-    #Removes the button that opened the menu
-
-    #root.grid_slaves(row = 2, column = 0)[0].destroy()
     
-    #connects to the database
-
-    con = sqlite3.connect(apod_desktop.image_cache_db)
-
-    cur = con.cursor()
-
-    #Gets the titles of all images in the database
-
-    get_titles_query = """
-        SELECT title FROM images 
+    #Gets all apod titles
     
-    """
-
-    cur.execute(get_titles_query)
-
-    titles_list = []
-
-    #Creates a list of all images in the database
-
-    for item in cur.fetchall():
-
-        titles_list.append(item[0])
+    titles_list = apod_desktop.get_all_apod_titles()
 
     #Creates a dropdown menu containing those titles
 
@@ -233,8 +216,6 @@ def dropdown_menu():
     select_button = Button(dropdown_group, text = "Select this image", command=lambda: get_date_and_image_dropdown(image_chosen.get()))
     select_button.grid(column = 2, row = 0, sticky = "nsew")
 
-    con.close()
-
 def screen_reset():
 
     for widget in root.winfo_children():
@@ -247,6 +228,9 @@ def screen_reset():
     create_desktop_button()
 
 def dynamic_resize():
+
+    #By giving the rows weight, they expand to fill available space
+    
     for row_num in range(0, 2):
         root.rowconfigure(row_num, weight = 1)
         dropdown_group.rowconfigure(row_num, weight = 1)
@@ -275,15 +259,17 @@ def set_window_and_task_image():
 
     image_lib.save_image_file(image_data, image_path)
 
-    #turns the image into a .ico photoimage thingy
+    #turns the image into a .ico photoimage thingy and saves it
 
     ico = Image.open(image_path)
 
-    #Sets the window icon
-
     ico.save(image_path, format='ICO')
 
+    #Sets the window icon
+
     root.iconbitmap(False, image_path)
+
+    #I do not know how this works, but it uses the ctypes library to change the taskbar image.
 
     window_handle = ctypes.windll.user32.GetParent(root.winfo_id())
 

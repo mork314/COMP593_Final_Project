@@ -60,11 +60,18 @@ def get_apod_date():
     Returns:
         date: APOD date
     """
-        
+    
+    #Date defaults to today's date
+
     apod_date = datetime.now()
+
+    #Sets acceptable date range
 
     start_date = datetime.strptime("1995-06-16", "%Y-%m-%d")
     today_date = datetime.now()
+
+    #Checks to make sure a parameter was passsed, and that if so, it's a date w/in the accepted range
+
     if len(argv) > 1:
 
         if apod_api.date_validate(argv[1]) and apod_api.date_in_range(argv[1], start_date, today_date):
@@ -100,9 +107,13 @@ def init_apod_cache(parent_dir):
     if not os.path.exists(image_cache_dir):
         os.mkdir(image_cache_dir)
 
+    #If the image cache already exists, function returns
+
     if os.path.isfile(image_cache_db):
         return
     
+    #If image cache doesn't exist, image cache sql database is created
+
     else:
         
         con = sqlite3.connect(image_cache_db)
@@ -126,7 +137,6 @@ def init_apod_cache(parent_dir):
         con.commit()
 
         con.close()
-
 
 def add_apod_to_cache(apod_date):
     """Adds the APOD image from a specified date to the image cache.
@@ -170,7 +180,7 @@ def add_apod_to_cache(apod_date):
 
         image_lib.save_image
     
-    # TODO: Check whether the APOD already exists in the image cache
+    #Checks whether the APOD already exists in the image cache
       
     if get_apod_id_from_db(image_hash) == 0:
         
@@ -194,6 +204,8 @@ def add_apod_to_db(title, explanation, file_path, sha256):
         int: The ID of the newly inserted APOD record, if successful.  Zero, if unsuccessful       
     """
 
+    #connects to image cache
+
     con = sqlite3.connect(image_cache_db)
 
     cur = con.cursor()
@@ -209,6 +221,8 @@ def add_apod_to_db(title, explanation, file_path, sha256):
         VALUES (?, ?, ?, ?);
     
     """
+
+    #Tries to add selected apod info to cache
 
     try:
         cur.execute(add_apod_query, (title, explanation, file_path, sha256))
@@ -342,9 +356,35 @@ def get_all_apod_titles():
     Returns:
         list: Titles of all images in the cache
     """
-    # TODO: Complete function body
-    # NOTE: This function is only needed to support the APOD viewer GUI
-    return
+
+    #connects to the database
+
+    con = sqlite3.connect(image_cache_db)
+
+    cur = con.cursor()
+
+    #Gets the titles of all images in the database
+
+    get_titles_query = """
+        SELECT title FROM images 
+    
+    """
+
+    cur.execute(get_titles_query)
+
+    titles_list = []
+
+    #Creates a list of all images in the database
+
+    for item in cur.fetchall():
+
+        titles_list.append(item[0])
+
+    #Closes database connection
+
+    con.close()
+
+    return titles_list
 
 if __name__ == '__main__':
     main()

@@ -59,6 +59,7 @@ def save_image_file(image_data, image_path):
         image_file.close()
 
         return True
+    
     except:
 
         return False
@@ -74,6 +75,8 @@ def set_desktop_background_image(image_path):
         bytes: True, if succcessful. False, if unsuccessful        
     """
     
+    #I don't know how this works, but stackoverflow said this is how you do it
+
     try:
         ctypes.windll.user32.SystemParametersInfoW(20, 0, image_path, 0)
 
