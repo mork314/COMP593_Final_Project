@@ -22,7 +22,6 @@ apod_desktop.init_apod_cache(script_dir)
 #Creates window
 root = Tk()
 #Sets size of window
-global window_width, window_height
 
 window_width = 1200
 
@@ -37,13 +36,9 @@ root.title("Astronomy Picture of the Day Viewer")
 mindate = date(1995, 6, 16)
 maxdate = date.today()
 
-global image_path
-
 image_path = ''
 
 root.image = image_path
-
-global widget_list
 
 widget_list = []
 
@@ -76,8 +71,6 @@ def open_calendar():
 
 def get_date_and_image_cal():
 
-    screen_reset()
-
     apod_date = open_calendar()
 
     apod_id = apod_desktop.add_apod_to_cache(apod_date)
@@ -94,20 +87,8 @@ def get_date_and_image_cal():
 
     display_image_and_explanation(image_path, image_info)
 
-def create_calendar_button():
-    
-    global cal_button
-
-    cal_button = Button(root, text = "Open the Calendar to Select a Date", command=get_date_and_image_cal)
-    
-    cal_button.grid(column = 1, row = 2, sticky = "nsew")
-
-    widget_list.append(cal_button)
-
 def get_date_and_image_dropdown(apod_title):
-    
-    screen_reset()
-    
+       
     con = sqlite3.connect(apod_desktop.image_cache_db)
 
     cur = con.cursor()
@@ -187,134 +168,9 @@ def display_image_and_explanation(image_path, image_info):
     
     return image_path
     
-def make_home_screen():
-
-    #Downloads the desired default image
-
-    image_data = image_lib.download_image(r'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.models-resource.com%2Fresources%2Fbig_icons%2F48%2F47830.png&f=1&nofb=1&ipt=4457110841d33186f65927ad4fd111c44c90daaa90154770bdc765b0edba9cf1&ipo=images')
-    
-    image_path = script_dir + '\minion_default.jpg'
-
-    image_lib.save_image_file(image_data, image_path)
-
-    #Displays selected image
-
-    img_to_display = Image.open(image_path)
-
-    img_to_display.thumbnail((window_width, window_height))
-
-    tk_image = ImageTk.PhotoImage(img_to_display)
-
-    global home_img_label
-
-    home_img_label = Label(image = tk_image)
-
-    home_img_label.image = tk_image
-
-    home_img_label.grid(column = 0, columnspan = 3, row = 1, padx = 10, pady = 10, sticky = "nsew")
-
-    widget_list.append(home_img_label)
-
-def dropdown_menu():
-    
-    #Gets all apod titles
-    
-    titles_list = apod_desktop.get_all_apod_titles()
-
-    #Creates a dropdown menu containing those titles
-
-    global dropdown_group
-
-    dropdown_group = LabelFrame(root, height = int(window_height / 10), text = "View Cached Image")
-    dropdown_group.grid(column = 0, row = 2, sticky = "nsew")
-
-    Label(dropdown_group, text = "Select an image from the database :").grid(column = 0, row = 0, sticky = "nsew")
-
-    n = StringVar()
-
-    global image_chosen
-
-    image_chosen = ttk.Combobox(dropdown_group, values = titles_list, width = 27, textvariable = n)
-
-    image_chosen.grid(column=1, row = 0, sticky = "nsew")
-
-    widget_list.append(image_chosen)
-
-    #def fetch_image():
-
-       # print(image_chosen.get())
-
-    global select_button
-
-    select_button = Button(dropdown_group, text = "Select this image", command=lambda: get_date_and_image_dropdown(image_chosen.get()))
-    select_button.grid(column = 2, row = 0, sticky = "nsew")
-
-    widget_list.append(select_button)
-
-def screen_reset():
-
-    for widget in root.winfo_children():
-        widget.destroy()
-    
-    create_calendar_button()
-
-    dropdown_menu()
-
-    create_desktop_button()
-
-def dynamic_resize():
-
-    #By giving the rows weight, they expand to fill available space
-    
-    for row_num in range(0, 2):
-        root.rowconfigure(row_num, weight = 1)
-        dropdown_group.rowconfigure(row_num, weight = 1)
-    
-    for column_num in range(0, 2):
-        root.columnconfigure(column_num, weight = 1)
-        dropdown_group.columnconfigure(column_num, weight = 1)
-
 def set_desktop_image(image_path):
 
     image_lib.set_desktop_background_image(image_path)
-
-def create_desktop_button():
-
-    global desk_button
-
-    desk_button = Button(root, text = "Set the current image as your desktop background", command=lambda: set_desktop_image(root.image))
-    
-    desk_button.grid(column = 2, row = 2, sticky = "nsew")
-
-    widget_list.append(desk_button)
-
-def set_window_and_task_image():
-
-    #Saves the desired image
-    
-    image_data = image_lib.download_image(r'https://cdn-icons-png.flaticon.com/512/3306/3306571.png')
-
-    image_path = script_dir + '\window_default.jpg'
-
-    image_lib.save_image_file(image_data, image_path)
-
-    #turns the image into a .ico photoimage thingy and saves it
-
-    ico = Image.open(image_path)
-
-    ico.save(image_path, format='ICO')
-
-    #Sets the window icon
-
-    root.iconbitmap(False, image_path)
-
-    #I do not know how this works, but it uses the ctypes library to change the taskbar image.
-
-    window_handle = ctypes.windll.user32.GetParent(root.winfo_id())
-
-    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("Tkinter_id")
-
-    ctypes.windll.user32.SetClassLongW(window_handle, -14, ctypes.windll.shell32.Shell_GetCachedImageIndexW(image_path, 0, 0x00000000))
 
 def when_resized(event):
     for widget in root.winfo_children():
@@ -378,21 +234,113 @@ def resize(event):
 # display image w/ title and description.
 
 
+#Saves the desired taskbar image
+
+image_data = image_lib.download_image(r'https://cdn-icons-png.flaticon.com/512/3306/3306571.png')
+
+image_path = script_dir + '\window_default.jpg'
+
+image_lib.save_image_file(image_data, image_path)
+
+#turns the image into a .ico photoimage thingy and saves it
+
+ico = Image.open(image_path)
+
+ico.save(image_path, format='ICO')
+
+#Sets the window icon
+
+root.iconbitmap(False, image_path)
+
+#I do not know how this works, but it uses the ctypes library to change the taskbar image.
+
+window_handle = ctypes.windll.user32.GetParent(root.winfo_id())
+
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("Tkinter_id")
+
+ctypes.windll.user32.SetClassLongW(window_handle, -14, ctypes.windll.shell32.Shell_GetCachedImageIndexW(image_path, 0, 0x00000000))
 
 #displays default image + menu options
 
-make_home_screen()
+#Downloads the desired default image
 
-set_window_and_task_image()
+image_data = image_lib.download_image(r'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.models-resource.com%2Fresources%2Fbig_icons%2F48%2F47830.png&f=1&nofb=1&ipt=4457110841d33186f65927ad4fd111c44c90daaa90154770bdc765b0edba9cf1&ipo=images')
 
-dropdown_menu()
+image_path = script_dir + '\minion_default.jpg'
 
-create_calendar_button()
+image_lib.save_image_file(image_data, image_path)
 
-create_desktop_button()
+#Displays selected image
 
-dynamic_resize()
+img_to_display = Image.open(image_path)
 
-root.bind("<Configure>", resize)
+img_to_display.thumbnail((window_width, window_height))
+
+tk_image = ImageTk.PhotoImage(img_to_display)
+
+home_img_label = Label(image = tk_image)
+
+home_img_label.image = tk_image
+
+home_img_label.grid(column = 0, columnspan = 3, row = 1, padx = 10, pady = 10, sticky = "nsew")
+
+widget_list.append(home_img_label)
+
+#Creates calendar button
+
+cal_button = Button(root, text = "Open the Calendar to Select a Date", command=get_date_and_image_cal)
+
+cal_button.grid(column = 1, row = 2, sticky = "nsew")
+
+widget_list.append(cal_button)
+
+#Gets all apod titles
+
+titles_list = apod_desktop.get_all_apod_titles()
+
+#Creates a dropdown menu containing those titles
+
+global dropdown_group
+
+dropdown_group = LabelFrame(root, height = int(window_height / 10), text = "View Cached Image")
+dropdown_group.grid(column = 0, row = 2, sticky = "nsew")
+
+Label(dropdown_group, text = "Select an image from the database :").grid(column = 0, row = 0, sticky = "nsew")
+
+n = StringVar()
+
+global image_chosen
+
+image_chosen = ttk.Combobox(dropdown_group, values = titles_list, width = 27, textvariable = n)
+
+image_chosen.grid(column=1, row = 0, sticky = "nsew")
+
+widget_list.append(image_chosen)
+
+select_button = Button(dropdown_group, text = "Select this image", command=lambda: get_date_and_image_dropdown(image_chosen.get()))
+select_button.grid(column = 2, row = 0, sticky = "nsew")
+
+widget_list.append(select_button)
+
+#Creates button to set current img as desktop background
+
+desk_button = Button(root, text = "Set the current image as your desktop background", command=lambda: set_desktop_image(root.image))
+
+desk_button.grid(column = 2, row = 2, sticky = "nsew")
+
+widget_list.append(desk_button)
+
+#By giving the rows weight, they expand to fill available space
+
+for row_num in range(0, 2):
+    root.rowconfigure(row_num, weight = 1)
+    dropdown_group.rowconfigure(row_num, weight = 1)
+
+for column_num in range(0, 2):
+    root.columnconfigure(column_num, weight = 1)
+    dropdown_group.columnconfigure(column_num, weight = 1)
+
+
+#root.bind("<Configure>", resize)
 
 root.mainloop()
