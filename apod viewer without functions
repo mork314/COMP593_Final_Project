@@ -117,7 +117,13 @@ def get_date_and_image_dropdown(apod_title):
 
     con.close()   
 
-def display_image_and_explanation(image_path, image_info):  
+def display_image_and_explanation(img_path, image_info):  
+
+    global image_path
+
+    image_path = img_path
+
+    home_img_label.destroy()
 
     window_width = root.winfo_width()
 
@@ -127,7 +133,7 @@ def display_image_and_explanation(image_path, image_info):
 
     #Scale image to window size
 
-    img_to_display.thumbnail((window_width, 0.7 * window_height))
+    img_to_display.thumbnail((window_width, 0.7*window_height))
 
     tk_image = ImageTk.PhotoImage(img_to_display)
 
@@ -198,28 +204,43 @@ def resize(event):
         
         if widget == explanation_label:
             
+            widget.config(wraplength = window_width)
+
             #gets height of explanation label cell
             
             #min_height = root.grid_bbox(0, 1)[3]
             
             min_height = window_height * 0.2
+            max_height = window_height * 0.3
 
                 #Increases /decreases font size to fit the size of the cell that the text is in
             
             if widget.winfo_reqheight() > window_height / 20:
                 
-                if widget.winfo_reqheight() < min_height:
+                if widget.winfo_reqheight() < min_height or widget.winfo_reqheight() > max_height:
                         
                         while widget.winfo_reqheight() < min_height:
-                            time.sleep(1)
+                            window_height = root.winfo_height()
+                            min_height = window_height * 0.2
                             font_size += 1
-                            print(font_size)
-                            
-                elif widget.winfo_reqheight() > min_height:
-                        
-                        while widget.winfo_reqheight() > min_height:
+                            widget.config(font=("Comic Sans MS", font_size))
+                        while widget.winfo_reqheight() > max_height:
+                            window_height = root.winfo_height()
+                            max_height = window_height * 0.3
                             font_size -= 1
-                widget.config(font=("Comic Sans MS", font_size))
+                            widget.config(font=("Comic Sans MS", font_size))
+        if widget == apod_img_label:
+            min_height = window_height * 0.5
+            max_height = window_height * 0.7
+            if widget.winfo_reqheight() < min_height or widget.winfo_reqheight() > max_height:
+                img_to_display = Image.open(image_path)
+                #Scale image to window size
+                img_to_display.thumbnail((window_width, max_height))
+                tk_image = ImageTk.PhotoImage(img_to_display)
+                widget.config(image=tk_image)
+                                        
+                        
+                
         else:
             None    
                 
@@ -238,19 +259,19 @@ def resize(event):
 
 image_data = image_lib.download_image(r'https://cdn-icons-png.flaticon.com/512/3306/3306571.png')
 
-image_path = script_dir + '\window_default.jpg'
+task_image_path = script_dir + '\window_default.jpg'
 
-image_lib.save_image_file(image_data, image_path)
+image_lib.save_image_file(image_data, task_image_path)
 
 #turns the image into a .ico photoimage thingy and saves it
 
-ico = Image.open(image_path)
+ico = Image.open(task_image_path)
 
-ico.save(image_path, format='ICO')
+ico.save(task_image_path, format='ICO')
 
 #Sets the window icon
 
-root.iconbitmap(False, image_path)
+root.iconbitmap(False, task_image_path)
 
 #I do not know how this works, but it uses the ctypes library to change the taskbar image.
 
@@ -258,7 +279,7 @@ window_handle = ctypes.windll.user32.GetParent(root.winfo_id())
 
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("Tkinter_id")
 
-ctypes.windll.user32.SetClassLongW(window_handle, -14, ctypes.windll.shell32.Shell_GetCachedImageIndexW(image_path, 0, 0x00000000))
+ctypes.windll.user32.SetClassLongW(window_handle, -14, ctypes.windll.shell32.Shell_GetCachedImageIndexW(task_image_path, 0, 0x00000000))
 
 #displays default image + menu options
 
@@ -266,13 +287,13 @@ ctypes.windll.user32.SetClassLongW(window_handle, -14, ctypes.windll.shell32.She
 
 image_data = image_lib.download_image(r'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.models-resource.com%2Fresources%2Fbig_icons%2F48%2F47830.png&f=1&nofb=1&ipt=4457110841d33186f65927ad4fd111c44c90daaa90154770bdc765b0edba9cf1&ipo=images')
 
-image_path = script_dir + '\minion_default.jpg'
+home_image_path = script_dir + '\minion_default.jpg'
 
-image_lib.save_image_file(image_data, image_path)
+image_lib.save_image_file(image_data, home_image_path)
 
 #Displays selected image
 
-img_to_display = Image.open(image_path)
+img_to_display = Image.open(home_image_path)
 
 img_to_display.thumbnail((window_width, window_height))
 
@@ -341,6 +362,6 @@ for column_num in range(0, 2):
     dropdown_group.columnconfigure(column_num, weight = 1)
 
 
-#root.bind("<Configure>", resize)
+root.bind("<Configure>", resize)
 
 root.mainloop()
