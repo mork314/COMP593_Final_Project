@@ -237,6 +237,7 @@ def resize(event):
                 #Scale image to window size
                 img_to_display.thumbnail((window_width, max_height))
                 tk_image = ImageTk.PhotoImage(img_to_display)
+                widget.please_no_garbage_collect = tk_image
                 widget.config(image=tk_image)
                                         
                         
